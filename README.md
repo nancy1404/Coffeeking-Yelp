@@ -26,7 +26,7 @@ The core deliverable is a simple, explainable recommendation engine that answers
 This repo does **not** redistribute the Yelp dataset.
 
 - Source: **Yelp Open Dataset**
-- Input filed expected locally:
+- Input files expected locally:
   - `yelp_academic_dataset_business.json`
   - `yelp_academic_dataset_review.json`
 
@@ -54,12 +54,11 @@ Built from the Yelp JSON files:
 ## Metrics (Explainable + Business-Friendly)
 
 ### Visibility Score
-A single score that combines *popularity* and *quality* while reducing outlier distortion:
+To make the analysis actionable for a hypothetical CoffeeKing brand, I created a Visibility Score that combines popularity and quality:
 
-**Visibility Score = log(1 + review volume) × average review stars**
+  - **Visibility Score = log(1 + review_volume) x average_review_stars**
 
-- `log(1 + reviews)` controls extreme review-count skew
-- Multiplying by rating prioritizes businesses that are both **well-known and well-liked**
+This rewards businesses that are both well-known (many reviews) and well-liked (high stars), while reducing extreme review-count outliers via `log(1+x)`.
 
 ### Winner (Top 10%)
 A “winner” is any business in the **top decile (top 10%)** of Visibility Score.
@@ -154,6 +153,21 @@ This writes the final deliverable table into SQLite:
 - `coffeeking_reco_v2`
 
 ---
+
+### Repo Structure
+
+```text
+Coffeeking-Yelp/
+├── notebooks/
+│   ├── 01_initial_look.ipynb
+│   ├── 02_build_sqlite_db.ipynb
+│   └── 03_CoffeeKing_Consulting_Deliverables.ipynb
+├── data_raw/                 # local only (NOT tracked) - Yelp JSON lives here
+├── db/                       # local only (NOT tracked) - SQLite DB lives here
+├── .gitignore
+├── README.md
+└── requirements.txt
+```
 
 ## Limitations / Next Steps
 
