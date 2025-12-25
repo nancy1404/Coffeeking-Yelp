@@ -51,55 +51,64 @@ Built from the Yelp JSON files:
 
 ---
 
-## Metrics (Explainable + Business-Friendly)
+## Definitions (Business Metrics)
 
 ### Visibility Score
-To make the analysis actionable for a hypothetical CoffeeKing brand, I created a Visibility Score that combines popularity and quality:
+To make the analysis actionable for a hypothetical **CoffeeKing** brand, I created a Visibility Score that combines popularity and quality:
 
-  - **Visibility Score = log(1 + review_volume) x average_review_stars**
+- **Visibility Score = log(1 + review_volume) × average_review_stars**
 
-This rewards businesses that are both well-known (many reviews) and well-liked (high stars), while reducing extreme review-count outliers via `log(1+x)`.
+This rewards businesses that are both **well-known** (many reviews) and **well-liked** (high stars), while reducing extreme review-count outliers via `log(1 + x)`.
 
 ### Winner (Top 10%)
-A “winner” is any business in the **top decile (top 10%)** of Visibility Score.
+I define “winners” as the **top decile** of Visibility Score:
 
-### Winner Rate
-For a segment (city or city × concept):
+- **winner = visibility_score ≥ P90(visibility_score)**  
+  (equivalently: `NTILE(10) = 1` when sorting by `visibility_score` DESC)
 
-**Winner rate = (# winners) / (total businesses)**
+### Winner Rate (by segment)
+For any segment (e.g., city, or city × concept):
 
-Interpretation: “What’s the probability that a business in this segment becomes a top performer?”
+- **winner_rate = (# winners in segment) / (total businesses in segment)**
 
----
+### Small-N Reliability Flag
+Some city×concept segments are small and should be treated as directional signals:
 
-## Concept Tagging (Positioning)
-
-To keep the project beginner-friendly but still useful, concept positioning is assigned using **simple keyword rules** on Yelp categories:
-
-- `coffee+alcohol`
-- `market/retail`
-- `food-forward`
-- `pure-coffee`
-
-These tags make the recommendations actionable (not just “where,” but also “what concept”).
+- `SMALL_N_THRESHOLD = 30`
+- If `n_business < 30`, mark as: **"SMALL N (treat as signal)"**
 
 ---
 
-## Key Findings (High-Level)
+## Deliverable Preview (Schema)
 
-- **Top winner cities** (high city-level winner rate) include:
-  - Santa Barbara, CA
-  - New Orleans, LA
-  - Saint Louis, MO
-  - (and several others depending on minimum sample thresholds)
+The final recommendation output is stored in SQLite as:
 
-- **What tends to win:**  
-  Across most high-opportunity cities, **coffee+alcohol** is disproportionately represented among winners compared to market/retail.
+- **`coffeeking_reco_v2`**
 
-- **Local exception signal:**  
-  In some markets (e.g., Reno, NV), **market/retail** performs competitively or slightly better than coffee+alcohol — suggesting a destination/retail angle may fit the local market better.
+Schema preview (columns you should expect):
 
-> Important: Very small city × concept segments are flagged as **“SMALL N (treat as signal)”** to avoid overconfidence.
+- `state`
+- `city`
+- `recommended_concept`
+- `recommended_winner_rate`
+- `recommended_avg_visibility`
+- `recommended_n_business`
+- `recommended_n_top10pct`
+- `sample_flag` *(e.g., SMALL N)*
+
+---
+
+## Key Findings (Interpret with Care)
+
+- **Where the market looks strongest (city-level):**  
+  In our sample, higher city-level winner rates appeared in **Santa Barbara (CA)**, **New Orleans (LA)**, and **Saint Louis (MO)** — suggesting these markets may have a higher probability of producing highly visible, highly rated coffee-related businesses.
+
+- **What concept tends to win:**  
+  Across most top cities, **coffee+alcohol** is over-represented among winners relative to **market/retail**, implying that an “evening + social” coffee positioning may be a strong go-to-market strategy.  
+  One notable exception is **Reno (NV)**, where **market/retail** performs slightly better, suggesting a retail/market destination angle may fit that local market.
+
+- **Recommendation (pilot → scale):**  
+  For an initial pilot, CoffeeKing should prioritize **coffee+alcohol** in high-opportunity cities (especially Santa Barbara and New Orleans) and keep **market/retail** as a strategic alternative — particularly in markets like Reno.
 
 ---
 
@@ -120,10 +129,11 @@ These tags make the recommendations actionable (not just “where,” but also �
 
 ## How to Reproduce (Local)
 
-### 1) Create local folders
-From the repo root:
+### 1) Set up environment
+Create a clean environment and install dependencies:
+
 ```bash
-mkdir -p data_raw db
+pip install -r requirements.txt
 ```
 
 ### 2) Download Yelp Open Dataset and place files
@@ -132,7 +142,7 @@ Place the following files in `data_raw/`:
 - `yelp_academic_dataset_business.json`
 - `yelp_academic_dataset_review.json`
 
-> Note: The Yelp dataset is **not** included in this repository.
+> Note: This project uses the Yelp Open Dataset for educational/portfolio purposes. The dataset is not included in this repository and is governed by Yelp’s own terms.
 
 ### 3) Build the SQLite database
 Run:
