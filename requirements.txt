@@ -1,0 +1,7 @@
+```txt
+pandas
+numpy
+tqdm
+jupyter
+ipykernel
+```
